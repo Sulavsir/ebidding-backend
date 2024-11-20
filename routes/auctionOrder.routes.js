@@ -5,15 +5,20 @@ const {
   deleteAuctionOrder,
   processPayment,
 } = require("../controllers/auctionOrder.controller");
+const { checkAuth } = require("../middleware/check-auth.middleware");
 
 const router = express.Router();
 
-router.post("/create/:productId", createAuctionOrder);
+router.post("/create/:productId", checkAuth(["Sales"]), createAuctionOrder);
 
-router.get("/:orderId", getAuctionOrderById);
+router.get(
+  "/:orderId",
+  checkAuth(["Sales", "Admin", "Super Admin"]),
+  getAuctionOrderById
+);
 
-router.delete("/:orderId", deleteAuctionOrder);
+router.delete("/:orderId", checkAuth(["Admin"]), deleteAuctionOrder);
 
-router.post("/payment/:orderId", processPayment);
+router.post("/payment/:orderId", checkAuth(["Sales"]), processPayment);
 
 module.exports = router;

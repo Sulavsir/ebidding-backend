@@ -12,8 +12,22 @@ const {
 
 router.get("/", getAuctionItems);
 router.get("/:productId", getAuctionItemById);
-router.post("/add", upload.single("image"), addAuctionItem);
-router.patch("/:productId", upload.single("image"), updateAuctionItem);
-router.delete("/:productId", deleteAuctionItem);
+router.post(
+  "/add",
+  checkAuth(["Sales", "Admin"]),
+  upload.single("image"),
+  addAuctionItem
+);
+router.patch(
+  "/:productId",
+  checkAuth(["Sales", "Admin", "Super Admin"]),
+  upload.single("image"),
+  updateAuctionItem
+);
+router.delete(
+  "/:productId",
+  checkAuth(["Admin", "Super Admin"]),
+  deleteAuctionItem
+);
 
 module.exports = router;

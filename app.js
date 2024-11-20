@@ -72,7 +72,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/products", auctionItemRoutes);
 app.use("/api/auction-orders", auctionOrderRoutes);
 app.use("/api/bid", bidRoutes);
-app.use("/api/users", checkAuth("Admin"), userRoutes);
+app.use("/api/users", checkAuth(["Admin"]), userRoutes);
 
 app.all("*", (req, res) => {
   res.status(404).json({

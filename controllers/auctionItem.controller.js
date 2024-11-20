@@ -1,4 +1,5 @@
 const Product = require("../models/Product");
+
 // Add a product for auction
 const addAuctionItem = async (req, res) => {
   const { name, description, startPrice, startTime, endTime } = req.body;
