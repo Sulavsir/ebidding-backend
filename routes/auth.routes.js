@@ -41,6 +41,6 @@ const signInValidator = [
 
 router.post("/sign-up", signUpValidator, signUp);
 router.post("/sign-in", signInValidator, signIn);
-router.post("/logout",checkAuth() ,logout);
+router.post("/logout", checkAuth(),logout);
 
 module.exports = router;

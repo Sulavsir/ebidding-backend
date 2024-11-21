@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
     personalInterests: {
-      type: String,
+      type: [String],
       default: "",
     },
     roles: {
