@@ -9,6 +9,9 @@ const {
   getAuctionItemById,
   updateAuctionItem,
   deleteAuctionItem,
+  getFeaturedAuctions,
+  setFeaturedAuction,
+  removeFeaturedAuction,
 } = require("../controllers/auctionItem.controller");
 
 router.get("/", getAuctionItems);
@@ -30,5 +33,20 @@ router.delete(
   checkAuth(["Admin", "Super Admin"]),
   deleteAuctionItem
 );
+
+router.get("/featured", getFeaturedAuctions);
+
+router.post(
+  "/featured/set/:id",
+  checkAuth(["Admin", "Super Admin"]), 
+  setFeaturedAuction
+);
+
+router.post(
+  "/featured/remove/:id",
+  checkAuth(["Admin", "Super Admin"]), 
+  removeFeaturedAuction
+);
+
 
 module.exports = router;

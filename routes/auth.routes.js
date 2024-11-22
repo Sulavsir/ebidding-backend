@@ -1,8 +1,15 @@
 const express = require("express");
 const { body } = require("express-validator");
-const { signUp, signIn, logout } = require("../controllers/auth.controller");
+const {
+  signUp,
+  signIn,
+  logout,
+  forgetPassword,
+  resetPassword
+} = require("../controllers/auth.controller");
 const validate = require("../middleware/validator.middleware");
 const { checkAuth } = require("../middleware/check-auth.middleware");
+const upload = require("../middleware/file-uploads.middleware");
 const router = express.Router();
 
 const signUpValidator = [
@@ -21,8 +28,20 @@ const signUpValidator = [
     .withMessage("Roles can only be 'Sales' or 'Customer'."),
   body("profileImage")
     .optional()
-    .isURL()
-    .withMessage("Profile Image should be a valid URL."),
+    .custom((value, { req }) => {
+      // Check if the file is present in the request
+      if (req.file) {
+        // File is uploaded, check the file type if necessary
+        const validMimeTypes = ["image/jpeg", "image/png", "image/gif"];
+        if (!validMimeTypes.includes(req.file.mimetype)) {
+          throw new Error(
+            "Invalid file type. Only JPEG, PNG, and GIF are allowed."
+          );
+        }
+      }
+      return true;
+    }),
+
   body("personalInterests")
     .optional()
     .isLength({ min: 3 })
@@ -39,8 +58,10 @@ const signInValidator = [
   validate,
 ];
 
-router.post("/sign-up", signUpValidator, signUp);
+router.post("/sign-up", upload.single("profileImage"), signUpValidator, signUp);
 router.post("/sign-in", signInValidator, signIn);
-router.post("/logout", checkAuth(),logout);
+router.post("/forgot-password", forgetPassword);
+router.post("/reset-password/:resetToken", resetPassword);
+router.post("/logout", checkAuth(), logout);
 
 module.exports = router;

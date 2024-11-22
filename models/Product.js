@@ -11,7 +11,7 @@ const productSchema = new mongoose.Schema(
     endTime: { type: Date, required: true },
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // Seller
     image: { type: String },
-    featured: String,
+    isFeatured: String,
     status: { type: String, default: "active" }, // active, ended, canceled
   },
   {

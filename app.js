@@ -53,9 +53,7 @@ app.post(
             status: "completed",
           }
         );
-        // Then define and call a function to handle the event payment_intent.succeeded
         break;
-      // ... handle other event types
       default:
     }
 

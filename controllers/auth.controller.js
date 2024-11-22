@@ -1,12 +1,15 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { JWT_SECRET_KEY } = require("../config/constant");
+const { JWT_SECRET_KEY, SMTP_EMAIL, SMTP_PWD } = require("../config/constant");
+const crypto = require("crypto");
+const nodemailer = require("nodemailer");
 
 const signUp = async (req, res) => {
   try {
-    const { name, email, password, roles, profileImage, personalInterests } =
-      req.body;
+    const { name, email, password, roles, personalInterests } = req.body;
+
+    const profileImage = req.file ? req.file.path : null;
 
     if (!["Sales", "Customer"].includes(roles)) {
       return res.status(400).json({
@@ -119,9 +122,93 @@ const logout = async (req, res) => {
     });
   }
 };
+const forgetPassword = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).send({ message: "User not found" });
+    }
+
+    const resetToken = crypto.randomBytes(32).toString("hex");
+
+    // Set the reset token and expiration time in the user's record
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour from now
+    await user.save();
+
+    const resetLink = `http://localhost:3003/reset-password/${resetToken}`;
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.SMTP_EMAIL, 
+        pass: process.env.SMTP_PWD,
+      },
+    });
+
+    // Setup email options
+    const mailOptions = {
+      to: user.email,
+      from: "sulav2236@gmail.com",
+      subject: "Password Reset Request",
+      html: `
+      <p>Hello,</p>
+      <p>We received a request to reset the password for your account.</p>
+      <p>To reset your password, please click the link below:</p>
+      <a href="${resetLink}">Reset Your Password</a>
+      <p>If you did not request this, please ignore this email. Your password will not be changed.</p>
+      <p>This link will expire in 1 hour for security purposes.</p>
+      <p>Thank you,</p>
+      <p>YourApp Team</p>
+    `,
+    };
+    await transporter.sendMail(mailOptions);
+
+    res.status(200).send({ message: "Password reset link sent to your email" });
+  } catch (error) {
+    console.error("Error sending password reset emasl:", error);
+    res.status(500).send({ message: "Error sending password reset link" });
+  }
+};
+
+// Password reset route handler
+const resetPassword = async (req, res) => {
+  const { resetToken } = req.params;
+  const { newPassword } = req.body;
+
+  try {
+    // Find the user with the provided reset token
+    const user = await User.findOne({
+      resetPasswordToken: resetToken,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res
+        .status(400)
+        .send({ message: "Invalid or expired reset token" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    user.password = hashedPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.status(200).send({ message: "Password has been successfully reset" });
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    res.status(500).send({ message: "Server error" });
+  }
+};
 
 module.exports = {
   signIn,
   signUp,
   logout,
+  forgetPassword,
+  resetPassword,
 };

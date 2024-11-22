@@ -21,16 +21,18 @@ const userSchema = new mongoose.Schema(
     },
     personalInterests: {
       type: [String],
-      default: "",
+      default: [],
     },
+    resetPasswordToken: { type: String }, 
+    resetPasswordExpires: { type: Date },
     roles: {
-      type: [String], 
+      type: [String],
       enum: ["Sales", "Customer", "Admin", "Super Admin"],
-      default: ["Customer"], 
+      default: ["Customer"], // Default role is Customer
     },
   },
   {
-    timestamps: true, 
+    timestamps: true,
   }
 );
 

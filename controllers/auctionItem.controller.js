@@ -1,5 +1,8 @@
 const Product = require("../models/Product");
 
+
+const User = require("../models/User"); 
+
 // Add a product for auction
 const addAuctionItem = async (req, res) => {
   const { name, description, startPrice, startTime, endTime } = req.body;
@@ -7,7 +10,6 @@ const addAuctionItem = async (req, res) => {
   if (!name || !startPrice || !startTime || !endTime) {
     return res.status(400).json({ message: "Missing required fields." });
   }
-
 
   try {
     const now = new Date();
@@ -45,8 +47,6 @@ const addAuctionItem = async (req, res) => {
     res.status(500).json({ message: "Error while adding auction item." });
   }
 };
-
-
 
 // Get all auction items
 const getAuctionItems = async (req, res) => {
@@ -106,7 +106,10 @@ const updateAuctionItem = async (req, res) => {
 
     // Ensure the auction is not started before updating
     const now = new Date();
-    if (auctionItem.status === "started" && now < new Date(auctionItem.startTime)) {
+    if (
+      auctionItem.status === "started" &&
+      now < new Date(auctionItem.startTime)
+    ) {
       return res.status(400).json({
         message: "Cannot update an auction that has already started.",
       });
@@ -117,7 +120,9 @@ const updateAuctionItem = async (req, res) => {
       const start = new Date(startTime);
       const end = new Date(endTime);
       if (end <= start) {
-        return res.status(400).json({ message: "End time must be greater than start time." });
+        return res
+          .status(400)
+          .json({ message: "End time must be greater than start time." });
       }
     }
 
@@ -150,7 +155,10 @@ const deleteAuctionItem = async (req, res) => {
 
     // Ensure the auction is not started before deleting
     const now = new Date();
-    if (auctionItem.status === "started" && now < new Date(auctionItem.startTime)) {
+    if (
+      auctionItem.status === "started" &&
+      now < new Date(auctionItem.startTime)
+    ) {
       return res.status(400).json({
         message: "Cannot delete an auction that has already started.",
       });
@@ -167,6 +175,69 @@ const deleteAuctionItem = async (req, res) => {
 };
 
 
+// Function to get all featured auctions
+const getFeaturedAuctions = async (req, res) => {
+ try {
+   const featuredAuctions = await Product.find({ isFeatured: true });
+   return res.json(featuredAuctions);
+ } catch (err) {
+   console.error(err);
+   return res.status(500).json({ message: "Server Error" });
+ }
+};
+
+// Function to set an auction as featured
+const setFeaturedAuction = async (req, res) => {
+  try {
+    const { auctionId } = req.params;
+
+    const auction = await Product.findById(auctionId);
+    if (!auction) {
+      return res.status(404).json({ message: "Auction not found" });
+    }
+    if(!auction.isFeatured){
+      auction.isFeatured = true;
+      await auction.save();
+      return res
+        .status(200)
+        .json({ message: "Auction set as featured", auction });
+    }
+    return res.status(400).json({
+      msg:"Item is already Featured"
+    })
+    
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Server Error" });
+  }
+};
+
+// Function to remove an auction from featured list
+const removeFeaturedAuction = async (req, res) => {
+  try {
+    const { auctionId } = req.params;
+
+    const auction = await Product.findById(auctionId);
+    if (!auction) {
+      return res.status(404).json({ message: "Auction not found" });
+    }
+    if(auction.isFeatured){
+      auction.isFeatured = false;
+      await auction.save();
+      return res
+        .status(200)
+        .json({ message: "Auction removed from featured", auction });
+    }else{
+      return res.status(400).json({
+        msg:"Item is not featured"
+      })
+    }
+    
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Server Error" });
+  }
+};
 
 module.exports = {
   addAuctionItem,
@@ -174,4 +245,7 @@ module.exports = {
   getAuctionItemById,
   updateAuctionItem,
   deleteAuctionItem,
+  getFeaturedAuctions,
+  setFeaturedAuction,
+  removeFeaturedAuction,
 };
